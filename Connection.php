@@ -144,9 +144,9 @@ class Rserve_Connection {
 		}
 		$this->debug = isset($params['debug']) ? (bool)$params['debug'] : FALSE;
 		$this->async = isset($params['async']) ? (bool)$params['async'] : FALSE;
-        $this->backoffOptions = \Yriveiro\Backoff\Backoff::getDefaultOptions();
-        $this->backoffOptions['maxAttempts'] = $this->backoffMaxAttempts;
-        $this->openSocket($session);
+		$this->backoffOptions = \Yriveiro\Backoff\Backoff::getDefaultOptions();
+		$this->backoffOptions['maxAttempts'] = $this->backoffMaxAttempts;
+		$this->openSocket($session);
 	}
 
 	/**
@@ -166,21 +166,19 @@ class Rserve_Connection {
 		$ok = socket_connect($socket, $this->host, $this->port);
 
 		if (!$ok) {
-            $backoff = new \Yriveiro\Backoff\Backoff($this->backoffOptions);
-            $attempt = 1;
-            try {
-                while (!$ok) {
-                    $time = $backoff->fullJitter($attempt);
-                    $attempt++;
-
-                    usleep($time);
-
-                    $ok = socket_connect($socket, $this->host, $this->port);
-                }
-            } catch (\Yriveiro\Backoff\BackoffException $e) {
-                throw $e;
-            }
-        }
+			$backoff = new \Yriveiro\Backoff\Backoff($this->backoffOptions);
+			$attempt = 1;
+			try {
+				while (!$ok) {
+					$time = $backoff->fullJitter($attempt);
+					$attempt++;
+					usleep($time);
+					$ok = socket_connect($socket, $this->host, $this->port);
+				}
+			} catch (\Yriveiro\Backoff\BackoffException $e) {
+				throw $e;
+			}
+		}
 
 		if( !$ok ) {
 			throw new Rserve_Exception('Unable to connect ['.socket_strerror(socket_last_error()).']');
