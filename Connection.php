@@ -176,12 +176,8 @@ class Rserve_Connection {
 					$ok = socket_connect($socket, $this->host, $this->port);
 				}
 			} catch (\Yriveiro\Backoff\BackoffException $e) {
-				throw $e;
+			    throw new Rserve_Exception('Unable to connect ['.socket_strerror(socket_last_error()).']');
 			}
-		}
-
-		if( !$ok ) {
-			throw new Rserve_Exception('Unable to connect ['.socket_strerror(socket_last_error()).']');
 		}
 
 		$this->socket = $socket;
