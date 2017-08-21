@@ -3,7 +3,7 @@
  * Rserve client for PHP
  * Supports Rserve protocol 0103 only (used by Rserve 0.5 and higher)
  * $Revision$
- * @author Clément TURBELIN
+ * @author ClÃ©ment TURBELIN
  * Developped using code from Simple Rserve client for PHP by Simon Urbanek Licensed under GPL v2 or at your option v3
  * $Id$
  */
@@ -12,7 +12,7 @@ require_once 'Parser.php';
 
 /**
  * Handle Connection and communicating with Rserve instance (QAP1 protocol)
- * @author Clément Turbelin
+ * @author ClÃ©ment Turbelin
  *
  */
 class Rserve_Connection {
@@ -92,6 +92,9 @@ class Rserve_Connection {
 	
 	private $ascync;
 
+	private $backoffOptions;
+	private $backoffMaxAttempts = 3;
+
 	/**
 	 * initialization of the library
 	 */
@@ -141,6 +144,8 @@ class Rserve_Connection {
 		}
 		$this->debug = isset($params['debug']) ? (bool)$params['debug'] : FALSE;
 		$this->async = isset($params['async']) ? (bool)$params['async'] : FALSE;
+		$this->backoffOptions = \Yriveiro\Backoff\Backoff::getDefaultOptions();
+		$this->backoffOptions['maxAttempts'] = $this->backoffMaxAttempts;
 		$this->openSocket($session);
 	}
 
@@ -159,9 +164,22 @@ class Rserve_Connection {
 		}
 		//socket_set_option($socket, SOL_TCP, SO_DEBUG,2);
 		$ok = socket_connect($socket, $this->host, $this->port);
-		if( !$ok ) {
-			throw new Rserve_Exception('Unable to connect ['.socket_strerror(socket_last_error()).']');
+
+		if (!$ok) {
+			$backoff = new \Yriveiro\Backoff\Backoff($this->backoffOptions);
+			$attempt = 1;
+			try {
+				while (!$ok) {
+					$time = $backoff->fullJitter($attempt);
+					$attempt++;
+					usleep($time);
+					$ok = socket_connect($socket, $this->host, $this->port);
+				}
+			} catch (\Yriveiro\Backoff\BackoffException $e) {
+			    throw new Rserve_Exception('Unable to connect ['.socket_strerror(socket_last_error()).']');
+			}
 		}
+
 		$this->socket = $socket;
 		if( !is_null($session_key) ) {
 			// Try to resume session
@@ -512,7 +530,7 @@ class Rserve_Connection {
 
 /**
  * R Session wrapper
- * @author Clément Turbelin
+ * @author ClÃ©ment Turbelin
  *
  */
 class Rserve_Session {
@@ -546,7 +564,7 @@ class Rserve_Session {
 
 /**
  * RServe Exception
- * @author Clément Turbelin
+ * @author ClÃ©ment Turbelin
  *
  */
 class Rserve_Exception extends Exception {
