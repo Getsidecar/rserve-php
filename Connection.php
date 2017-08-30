@@ -288,6 +288,11 @@ class Rserve_Connection {
 		if( !$r['is_error'] ) {
 				return $this->parseResponse($r['contents'], $parser);
 		}
+
+		if(strpos($r['contents'], "R warning:") == 0) {
+				throw new Rserve_Warning($r);
+		}
+
 		throw new Rserve_Exception('unable to evaluate', $r);
 	}
 
@@ -576,6 +581,9 @@ class Rserve_Exception extends Exception {
 }
 
 class Rserve_Parser_Exception extends Rserve_Exception {
+}
+
+class Rserve_Warning extends Rserve_Exception {
 }
 
 Rserve_Connection::init();
