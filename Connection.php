@@ -126,6 +126,7 @@ class Rserve_Connection {
 	 *  
 	 */
 	public function __construct($host='127.0.0.1', $port = 6311, $params=array()) {
+		return;
 		if( !self::$init ) {
 			self::init();
 		}
